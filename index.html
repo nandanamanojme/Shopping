@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Flower Shop Demo with Cart</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+  <style>
+    :root{ --pink: #e84393; --bg:#fff; --muted:#999; }
+
+    *{ margin:0; padding:0; box-sizing:border-box; font-family:Verdana, Geneva, Tahoma, sans-serif; transition:.15s linear; }
+    html{ font-size:62.5%; scroll-behavior:smooth; scroll-padding-top:6rem; }
+    body{ background:#fafafa; color:#333; }
+
+    /* Header */
+    header{ position:fixed; top:0; left:0; right:0; background:var(--bg); padding:2rem 9%; display:flex; align-items:center; justify-content:space-between; z-index:1000; box-shadow:0 .5rem 1rem rgba(0,0,0,.06); }
+    .logo{ font-size:3rem; font-weight:700; color:#333; text-transform:lowercase; }
+    .logo span{ color:var(--pink); }
+    .navbar a{ font-size:1.8rem; color:#666; padding:0 .8rem; text-transform:lowercase; }
+    .navbar a:hover{ color:var(--pink); }
+    .header-actions{ display:flex; align-items:center; gap:1.2rem; }
+    .icon-btn{ font-size:2.2rem; color:#333; text-decoration:none; position:relative; }
+    .cart-count{ position:absolute; top:-.6rem; right:-.8rem; background:var(--pink); color:#fff; font-size:1.2rem; padding:.2rem .5rem; border-radius:50%; min-width:2rem; text-align:center; }
+
+    /* Layout sections */
+    section{ padding:10rem 9% 4rem; }
+    .home{ min-height:60vh; display:flex; align-items:center; gap:3rem; background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.6)); }
+    .home .content h3{ font-size:4.2rem; margin-bottom:.6rem; }
+    .home .content .subtitle{ font-size:1.8rem; color:var(--pink); margin-bottom:1rem; }
+    .btn{ display:inline-block; background:#333; color:#fff; padding:.9rem 2.4rem; border-radius:5rem; font-size:1.6rem; text-transform:lowercase; }
+    .btn:hover{ background:var(--pink); }
+
+    .heading{ text-align:center; font-size:3.2rem; margin:2rem 0; color:#333; }
+    .heading span{ color:var(--pink); }
+
+    /* Products */
+    .products .box-container{ display:flex; flex-wrap:wrap; gap:1.5rem; }
+    .box{ flex:1 1 28rem; background:#fff; border-radius:.6rem; border:.1rem solid rgba(0,0,0,.06); box-shadow:0 .4rem .8rem rgba(0,0,0,.04); overflow:hidden; display:flex; flex-direction:column; }
+    .box .image{ height:18rem; background:linear-gradient(180deg,#f7f7f7,#fff); display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:1.6rem; }
+    .box .content{ padding:1.6rem; text-align:center; }
+    .box h3{ font-size:1.9rem; margin-bottom:.6rem; text-transform:lowercase; }
+    .price{ font-size:1.8rem; color:var(--pink); font-weight:700; margin-bottom:1rem; }
+    .price span{ font-size:1.4rem; color:#999; text-decoration:line-through; margin-left:.6rem; font-weight:400; }
+
+    .actions-row{ display:flex; gap:.8rem; justify-content:center; align-items:center; }
+    .add-btn{ background:var(--pink); color:#fff; padding:.7rem 1.2rem; border-radius:.6rem; font-size:1.4rem; cursor:pointer; border:none; }
+    .add-btn:hover{ background:#d22b78; }
+    .buy-btn{ background:#333; color:#fff; padding:.7rem 1.2rem; border-radius:.6rem; font-size:1.4rem; cursor:pointer; border:none; }
+    .buy-btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+    /* Cart modal */
+    .cart-modal{ position:fixed; top:6rem; right:2rem; width:34rem; max-height:70vh; background:#fff; border-radius:.6rem; box-shadow:0 .6rem 1.6rem rgba(0,0,0,.12); overflow:auto; z-index:2000; display:none; flex-direction:column; }
+    .cart-modal.open{ display:flex; }
+    .cart-header{ padding:1.2rem 1.6rem; border-bottom:.1rem solid rgba(0,0,0,.06); display:flex; justify-content:space-between; align-items:center; }
+    .cart-list{ padding:1rem; display:flex; flex-direction:column; gap:.8rem; }
+    .cart-item{ display:flex; gap:.8rem; align-items:center; justify-content:space-between; padding:.6rem; border-radius:.4rem; background:#fafafa; }
+    .cart-item .meta{ display:flex; gap:.8rem; align-items:center; }
+    .cart-item .meta .title{ font-size:1.4rem; color:#333; }
+    .cart-item .meta .qty{ font-size:1.2rem; color:#666; }
+    .cart-footer{ padding:1rem; border-top:.1rem solid rgba(0,0,0,.06); display:flex; gap:.8rem; align-items:center; justify-content:space-between; }
+    .total{ font-weight:700; color:#333; font-size:1.6rem; }
+
+    /* Small screens */
+    @media (max-width:768px){
+      header{ padding:1.2rem 2rem; }
+      section{ padding-top:8rem; }
+      .products .box-container{ gap:1rem; }
+      .box{ flex:1 1 100%; }
+      .cart-modal{ right:1rem; left:1rem; width:auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a class="logo" href="#">flower<span>.</span></a>
+
+    <nav class="navbar" aria-label="Main navigation">
+      <a href="#home">home</a>
+      <a href="#about">about</a>
+      <a href="#products">products</a>
+      <a href="#contact">contact</a>
+    </nav>
+
+    <div class="header-actions">
+      <a class="icon-btn" href="#" id="wishlist" title="Wishlist"><i class="fas fa-heart"></i></a>
+      <a class="icon-btn" href="#" id="cartToggle" title="Cart" aria-haspopup="true" aria-expanded="false">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-count" id="cartCount">0</span>
+      </a>
+      <a class="icon-btn" href="#" id="user"><i class="fas fa-user"></i></a>
+    </div>
+  </header>
+
+  <section class="home" id="home">
+    <div class="content">
+      <h3>fresh flowers</h3>
+      <div class="subtitle">natural & beautiful flowers</div>
+      <p style="max-width:60rem; color:#666; font-size:1.5rem;">Explore our curated selection. Use the Add to cart button to collect items, then open the cart to buy.</p>
+      <a class="btn" href="#products">shop products</a>
+    </div>
+  </section>
+
+  <section class="about" id="about">
+    <h2 class="heading"><span>about</span> us</h2>
+    <p style="text-align:center; color:#666; font-size:1.5rem; max-width:80rem; margin:0 auto 2rem;">We deliver fresh flowers with care. This demo includes a simple cart to add items and complete a purchase flow.</p>
+  </section>
+
+  <section class="products" id="products">
+    <h2 class="heading">latest <span>products</span></h2>
+
+    <div class="box-container" id="productList">
+
+      <!-- Product cards generated statically for demo -->
+      <div class="box" data-id="p1" data-name="Rose Bouquet" data-price="12.99">
+        <div class="image">Rose Bouquet</div>
+        <div class="content">
+          <h3>Rose Bouquet</h3>
+          <div class="price">$12.99 <span>$15.99</span></div>
+          <div class="actions-row">
+            <button class="add-btn" data-id="p1">Add to cart</button>
+            <button class="buy-btn" data-id="p1">Buy now</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="box" data-id="p2" data-name="Tulip Mix" data-price="9.99">
+        <div class="image">Tulip Mix</div>
+        <div class="content">
+          <h3>Tulip Mix</h3>
+          <div class="price">$9.99 <span>$12.99</span></div>
+          <div class="actions-row">
+            <button class="add-btn" data-id="p2">Add to cart</button>
+            <button class="buy-btn" data-id="p2">Buy now</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="box" data-id="p3" data-name="Sunflower Pot" data-price="14.50">
+        <div class="image">Sunflower Pot</div>
+        <div class="content">
+          <h3>Sunflower Pot</h3>
+          <div class="price">$14.50 <span>$18.00</span></div>
+          <div class="actions-row">
+            <button class="add-btn" data-id="p3">Add to cart</button>
+            <button class="buy-btn" data-id="p3">Buy now</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="box" data-id="p4" data-name="Orchid Stem" data-price="19.00">
+        <div class="image">Orchid Stem</div>
+        <div class="content">
+          <h3>Orchid Stem</h3>
+          <div class="price">$19.00 <span>$22.00</span></div>
+          <div class="actions-row">
+            <button class="add-btn" data-id="p4">Add to cart</button>
+            <button class="buy-btn" data-id="p4">Buy now</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Cart modal -->
+  <div class="cart-modal" id="cartModal" role="dialog" aria-label="Shopping cart">
+    <div class="cart-header">
+      <strong>Cart</strong>
+      <button id="closeCart" aria-label="Close cart" style="background:none;border:none;font-size:1.6rem;cursor:pointer;">✕</button>
+    </div>
+    <div class="cart-list" id="cartList">
+      <!-- Items inserted here -->
+    </div>
+    <div class="cart-footer">
+      <div class="total" id="cartTotal">Total $0.00</div>
+      <div style="display:flex; gap:.6rem;">
+        <button class="btn" id="clearCart">Clear</button>
+        <button class="btn" id="checkoutBtn">Checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Simple cart implementation
+    const cart = {}; // {id: {id,name,price,qty}}
+    const cartCountEl = document.getElementById('cartCount');
+    const cartModal = document.getElementById('cartModal');
+    const cartList = document.getElementById('cartList');
+    const cartTotalEl = document.getElementById('cartTotal');
+    const cartToggle = document.getElementById('cartToggle');
+    const closeCart = document.getElementById('closeCart');
+    const clearCartBtn = document.getElementById('clearCart');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+
+    // Utility
+    function formatPrice(n){ return '$' + Number(n).toFixed(2); }
+
+    // Update cart UI
+    function updateCartUI(){
+      const items = Object.values(cart);
+      const totalQty = items.reduce((s,i)=>s+i.qty,0);
+      const totalPrice = items.reduce((s,i)=>s + i.price * i.qty, 0);
+
+      cartCountEl.textContent = totalQty;
+      cartTotalEl.textContent = 'Total ' + formatPrice(totalPrice);
+
+      cartList.innerHTML = '';
+      if(items.length === 0){
+        cartList.innerHTML = '<div style="padding:1rem;color:#666;">Your cart is empty.</div>';
+      } else {
+        items.forEach(it => {
+          const div = document.createElement('div');
+          div.className = 'cart-item';
+          div.innerHTML = `
+            <div class="meta">
+              <div class="title">${it.name}</div>
+              <div class="qty">x${it.qty}</div>
+            </div>
+            <div style="display:flex;gap:.6rem;align-items:center;">
+              <div style="font-weight:700">${formatPrice(it.price * it.qty)}</div>
+              <button data-id="${it.id}" class="remove-item" style="background:none;border:none;color:#d22b78;cursor:pointer;">Remove</button>
+            </div>
+          `;
+          cartList.appendChild(div);
+        });
+      }
+    }
+
+    // Add item
+    function addToCart(id, name, price, qty = 1){
+      if(cart[id]) cart[id].qty += qty;
+      else cart[id] = { id, name, price: Number(price), qty };
+      updateCartUI();
+      // briefly highlight cart icon
+      cartToggle.animate([{ transform:'scale(1)' }, { transform:'scale(1.08)' }, { transform:'scale(1)' }], { duration:220 });
+    }
+
+    // Remove item
+    function removeFromCart(id){
+      delete cart[id];
+      updateCartUI();
+    }
+
+    // Clear cart
+    function clearCart(){
+      for(const k in cart) delete cart[k];
+      updateCartUI();
+    }
+
+    // Checkout simulation
+    function checkout(){
+      const items = Object.values(cart);
+      if(items.length === 0){
+        alert('Your cart is empty.');
+        return;
+      }
+      // Simple simulated purchase flow
+      const summary = items.map(i => `${i.name} x${i.qty}`).join('\\n');
+      const total = items.reduce((s,i)=>s + i.price * i.qty, 0);
+      const confirmed = confirm(`Confirm purchase:\\n\\n${summary}\\n\\nTotal: ${formatPrice(total)}\\n\\nClick OK to complete purchase.`);
+      if(confirmed){
+        alert('Thank you! Your purchase was successful.');
+        clearCart();
+        cartModal.classList.remove('open');
+      }
+    }
+
+    // Wire up Add and Buy buttons
+    document.addEventListener('click', (e) => {
+      const addBtn = e.target.closest('.add-btn');
+      if(addBtn){
+        const id = addBtn.dataset.id;
+        const box = document.querySelector(`.box[data-id="${id}"]`);
+        const name = box.dataset.name || box.querySelector('h3').textContent;
+        const price = box.dataset.price || box.querySelector('.price').textContent.replace(/[^0-9.]/g,'');
+        addToCart(id, name, Number(price), 1);
+        return;
+      }
+
+      const buyBtn = e.target.closest('.buy-btn');
+      if(buyBtn){
+        const id = buyBtn.dataset.id;
+        const box = document.querySelector(`.box[data-id="${id}"]`);
+        const name = box.dataset.name || box.querySelector('h3').textContent;
+        const price = box.dataset.price || box.querySelector('.price').textContent.replace(/[^0-9.]/g,'');
+        // Add one and go to checkout
+        addToCart(id, name, Number(price), 1);
+        cartModal.classList.add('open');
+        checkout();
+        return;
+      }
+
+      const removeBtn = e.target.closest('.remove-item');
+      if(removeBtn){
+        const id = removeBtn.dataset.id;
+        removeFromCart(id);
+        return;
+      }
+    });
+
+    // Cart toggle
+    cartToggle.addEventListener('click', (ev) => {
+      ev.preventDefault();
+      cartModal.classList.toggle('open');
+      cartToggle.setAttribute('aria-expanded', cartModal.classList.contains('open'));
+    });
+    closeCart.addEventListener('click', () => cartModal.classList.remove('open'));
+    clearCartBtn.addEventListener('click', clearCart);
+    checkoutBtn.addEventListener('click', checkout);
+
+    // Initialize UI
+    updateCartUI();
+  </script>
+</body>
+</html>
+
